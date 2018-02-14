@@ -4,18 +4,6 @@ import numpy as np
 import pandas as pd
 
 
-def load_colvar_values_and_forces(file_name):
-    """
-    :param file_name: str
-    :return: pandas DataFrame
-    """
-    header = open(file_name, "r").readline()
-    assert header.startswith("#"), file_name + ": first line does not start with #"
-    columns = header.split()[2:]
-    data = np.loadtxt(file_name)[:, 1:]
-    return pd.DataFrame(data, columns=columns)
-
-
 class USWindow(object):
     def __init__(self, colvar_file):
         """
@@ -94,4 +82,61 @@ class USWindow(object):
         if np.any(forces.isnull()):
             raise Exception("There are null values in forces")
         return forces
+
+def load_colvar_values_and_forces(file_name):
+    """
+    :param file_name: str
+    :return: pandas DataFrame
+    """
+    header = open(file_name, "r").readline()
+    assert header.startswith("#"), file_name + ": first line does not start with #"
+    columns = header.split()[2:]
+    data = np.loadtxt(file_name)[:, 1:]
+    return pd.DataFrame(data, columns=columns)
+
+
+def load_namd_energy(file_name):
+    """
+
+    :param file_name: str
+    :return: energies, pandas DataFrame
+    """
+    energy_lines = []
+    header_line = None
+    with open(file_name, "r") as handle:
+        for line in handle:
+            if line.startswith("ETITLE:"):
+                header_line = line
+
+            elif line.startswith("ENERGY:"):
+                energy_lines.append(line)
+
+    if header_line is None:
+        raise Exception("Cannot find header line")
+    if len(energy_lines) == 0:
+        raise Exception("There is no energy line")
+
+    columns = header_line.split()[1:]
+    ncols = len(columns)
+    nlines = len(energy_lines)
+
+    data = np.zeros([nlines, ncols])
+
+    for i, line in enumerate(energy_lines):
+        data[i,:] = np.array( [ float(entry) for entry in line.split()[1:] ] )
+
+    return pd.DataFrame(data, columns=columns)
+
+
+def unbiased_potentials(namd_logfile):
+    """
+    :param namd_logfile: str
+    :return: u0, pandas Series
+    """
+    data = load_namd_energy(namd_logfile)
+    u0 = data["POTENTIAL"] - data["MISC"]
+
+    if np.any(u0.isnull()):
+        raise Exception("There are null value in unbiased_potentials extracted from " + namd_logfile)
+    return u0
 
