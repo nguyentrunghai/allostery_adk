@@ -1,8 +1,15 @@
 
 
+from __future__ import print_function
+
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
 
+KB = 0.0019872041   # kcal/mol/K
+TEMPERATURE = 298.15
+BETA = 1./ KB / TEMPERATURE
 
 class USWindow(object):
     def __init__(self, colvar_file):
@@ -83,16 +90,28 @@ class USWindow(object):
             raise Exception("There are null values in forces")
         return forces
 
+
 def load_colvar_values_and_forces(file_name):
     """
     :param file_name: str
-    :return: pandas DataFrame
+    :return: a pandas DataFrame
     """
     header = open(file_name, "r").readline()
     assert header.startswith("#"), file_name + ": first line does not start with #"
     columns = header.split()[2:]
     data = np.loadtxt(file_name)[:, 1:]
     return pd.DataFrame(data, columns=columns)
+
+
+def load_colvar_values(file_name):
+    """
+    :param file_name: str
+    :return: a pandas DataFrame
+    """
+    data = load_colvar_values_and_forces(file_name)
+    all_columns = list(data.columns)
+    sel_columns = [col for col in all_columns if ( not col.startswith("fa_") ) and col.split("fa_")[-1] in all_columns]
+    return data[sel_columns]
 
 
 def load_namd_energy(file_name):
@@ -139,4 +158,67 @@ def unbiased_potentials(namd_logfile):
     if np.any(u0.isnull()):
         raise Exception("There are null value in unbiased_potentials extracted from " + namd_logfile)
     return u0
+
+
+def potential_energy_matrix(colvar_setup_files, colvar_traj_files, namd_logfiles):
+    """
+    :param colvar_setup_files: list of str
+    :param colvar_traj_files: list of str
+    :param namd_logfiles: list of str
+    :return: u_kln, 3D ndarray
+    """
+    assert len(colvar_setup_files) == len(colvar_traj_files) == len(namd_logfiles), "all list of files must have the same len"
+
+    u0_kl = []
+    for namd_logfile in namd_logfiles:
+        u0 = unbiased_potentials(namd_logfile)
+        u0_kl.append(u0)
+    u0_kl = np.array(u0_kl)
+
+    K, N = u0_kl.shape
+    L = K + 1
+    print("(K, N) = ", K, N)
+    u_kln = np.zeros([K, L, N])
+    u_kln[:, -1, :] = u0_kl
+
+    us_windows = [USWindow(colvar_setup_file) for colvar_setup_file in colvar_setup_files]
+    colvar_values = [load_colvar_values(colvar_traj_file) for colvar_traj_file in colvar_traj_files]
+
+    for k in range(K):
+        sample_k = colvar_values[k]
+
+        for l in range(K):
+            window_l = us_windows[l]
+
+            pot = window_l.cal_biasing_potentials(sample_k)
+
+            u_kln[k, l, :] = pot.values
+
+    u_kln *= BETA
+
+    N_k = np.ones([L], dtype=int)*N
+    N_k[-1] = 0
+
+    return u_kln, N_k
+
+
+def load_colvar_values_matrices(colvar_traj_files):
+    """
+    :param colvar_traj_files: list of str
+    :return: dict mapping colvar name to ndarray of shape (K, N)
+    """
+    colvar_values = defaultdict(list)
+
+    for traj_file in colvar_traj_files:
+        values = load_colvar_values(traj_file)
+
+        for colvar in values.columns:
+            colvar_values[colvar].append(values[colvar].values)
+
+    colvar_values = {colvar:np.array(colvar_values[colvar]) for colvar in colvar_values}
+
+    shapes = [colvar_values[colvar].shape for colvar in colvar_values]
+    assert len(set(shapes)) == 1, "colvar_values has arrays of different shape"
+
+    return colvar_values
 
