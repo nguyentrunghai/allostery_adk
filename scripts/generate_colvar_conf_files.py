@@ -1,5 +1,9 @@
 
-COLVAR_PART_FILE = "definition_of_pair_of_angles_adk_amp_dist.in"
+
+import os
+import numpy as np
+
+COLVAR_PART_FILE = "definition_of_pair_of_angles.in"
 COLVAR_OUT_PREFIX = "colvar_"
 
 FORCE_CONSTANT = 0.5
@@ -7,10 +11,18 @@ FORCE_CONSTANT = 0.5
 COLVAR1_NAME = "nmp_core_angle"
 COLVAR2_NAME = "lid_core_angle"
 
-NMP_CORE_ANGLES = range(45, 71, 5)
-LID_CORE_ANGLES = range(105, 146, 5)
+START = 54
 
-def progress_windows():
+OLD_NMP_CORE_ANGLES = range(45, 71, 5)
+OLD_LID_CORE_ANGLES = range(105, 146, 5)
+
+NMP_CORE_ANGLES = list( np.arange(42.5, 76, 5) )
+NMP_CORE_ANGLES = sorted(NMP_CORE_ANGLES)
+
+LID_CORE_ANGLES = list( np.arange(102.5, 155, 5) )
+LID_CORE_ANGLES = sorted(LID_CORE_ANGLES)
+
+def progress_windows_NOT_USED():
     lid_core = LID_CORE_ANGLES
     nmp_core_forward = NMP_CORE_ANGLES
     nmp_core_backward = NMP_CORE_ANGLES[::-1]
@@ -26,6 +38,19 @@ def progress_windows():
             pairs.append((x, y))
     return pairs
 
+def progress_windows():
+    lid_core = LID_CORE_ANGLES
+    nmp_core = NMP_CORE_ANGLES
+
+    pairs = []
+    for y in lid_core:
+        for x in nmp_core:
+            pairs.append((x, y))
+
+    for x in OLD_NMP_CORE_ANGLES:
+        pairs.append((x, 150))
+    return pairs
+
 def gen_harmonic_part(center_colvar1, center_colvar2):
     """
     """
@@ -39,13 +64,19 @@ def gen_harmonic_part(center_colvar1, center_colvar2):
 
 
 if __name__ == "__main__":
+
     centers = progress_windows()
     
     colvar_part = open(COLVAR_PART_FILE, "r").read()
 
     for i, (center_colvar1, center_colvar2) in enumerate(centers):
-        out_file_name = COLVAR_OUT_PREFIX + "%d.in" %i
+
+        count = START + i
+        out_file_name = COLVAR_OUT_PREFIX + "%d.in" %count
         print out_file_name, center_colvar1, center_colvar2
+
+        if os.path.exists(out_file_name):
+            raise Exception(out_file_name + " exist")
 
         harmonic_part = gen_harmonic_part(center_colvar1, center_colvar2)
 

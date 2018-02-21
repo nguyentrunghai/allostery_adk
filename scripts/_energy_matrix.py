@@ -8,8 +8,9 @@ import numpy as np
 import pandas as pd
 
 KB = 0.0019872041   # kcal/mol/K
-TEMPERATURE = 298.15
+TEMPERATURE = 300.
 BETA = 1./ KB / TEMPERATURE
+
 
 class USWindow(object):
     def __init__(self, colvar_file):
@@ -59,6 +60,9 @@ class USWindow(object):
 
     def get_colvar_names(self):
         return self._colvar_names
+
+    def get_centers(self):
+        return self._centers
 
     def cal_biasing_potentials(self, colvar_values):
         """
