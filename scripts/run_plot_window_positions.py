@@ -13,7 +13,7 @@ from _energy_matrix import USWindow
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--colvar_files_dir',       type=str, default="./")
-parser.add_argument('--nr_colvar_files',        type=int, default=138)
+parser.add_argument('--nr_colvar_files',        type=int, default=177)
 
 parser.add_argument('--x',                      type=str, default="nmp_core_angle")
 parser.add_argument('--y',                      type=str, default="lid_core_angle")
