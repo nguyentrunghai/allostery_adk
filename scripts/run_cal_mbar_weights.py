@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 
 import argparse
 import os
@@ -66,6 +67,6 @@ save_to_nc({"weights":weights}, nc_handle)
 nc_handle.close()
 
 for i in range(weights.shape[0]):
-    print i, weights[i].sum()
+    print(i, weights[i].sum())
 
-print "max weight", weights.max()
+print("max weight", weights.max())

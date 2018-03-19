@@ -100,6 +100,7 @@ def load_colvar_values_and_forces(file_name):
     :param file_name: str
     :return: a pandas DataFrame
     """
+    print("Loading file :", file_name)
     header = open(file_name, "r").readline()
     assert header.startswith("#"), file_name + ": first line does not start with #"
     columns = header.split()[2:]

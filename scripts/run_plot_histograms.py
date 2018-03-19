@@ -165,10 +165,9 @@ def _plot_2d_kde(x, y, out, xlabel=None, ylabel=None, zlabel=None, nticks=10):
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--namd_dir',           type=str, default="/home/tnguye46/allostery/restraint/production/adk")
-parser.add_argument('--nwindows',               type=int, default=54)
-parser.add_argument('--weight_file',        type=str,
-                    default="/home/tnguye46/allostery/restraint/mbar_weights/adk/mbar_weights.nc")
+parser.add_argument('--namd_dir',           type=str, default="adk")
+parser.add_argument('--nwindows',           type=int, default=54)
+parser.add_argument('--weight_file',        type=str, default="mbar_weights.nc")
 
 parser.add_argument('--x',        type=str, default="nmp_core_angle")
 parser.add_argument('--y',        type=str, default="lid_core_angle")
