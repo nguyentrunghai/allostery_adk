@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--namd_dir',               type=str, default="adk")
 parser.add_argument('--colvar_setup_dir',       type=str, default="colvar_files")
 parser.add_argument('--nwindows',               type=int, default=54)
+parser.add_argument('--exclude_windows',        type=str, default=" ")
 parser.add_argument('--out',                    type=str, default="mbar_weights.nc")
 
 args = parser.parse_args()
@@ -38,13 +39,17 @@ def _run_mbar(u_kln, N_k):
     mbar = pymbar.MBAR(u_kln, N_k, verbose = True, initial_f_k = f_k_BAR)
     return mbar
 
+exclude_windows = [int(s) for s in args.exclude_windows.split()]
+print("exclude_windows", exclude_windows)
+
+use_windows = [i for i in range(args.nwindows) if i not in exclude_windows]
 
 colvar_setup_files = [os.path.join(args.colvar_setup_dir, COLVAR_SETUP_PREFIX + "%d"%i + COLVAR_SETUP_SUFFIX)
-                      for i in range(args.nwindows)]
+                      for i in use_windows]
 
-colvar_traj_files = [os.path.join(args.namd_dir, "%d"%i, COLVAR_TRAJ_FILE) for i in range(args.nwindows)]
+colvar_traj_files = [os.path.join(args.namd_dir, "%d"%i, COLVAR_TRAJ_FILE) for i in use_windows]
 
-namd_logfiles= [os.path.join(args.namd_dir, "%d"%i, NAMD_LOGFILE) for i in range(args.nwindows)]
+namd_logfiles= [os.path.join(args.namd_dir, "%d"%i, NAMD_LOGFILE) for i in use_windows]
 
 u_kln, N_k = potential_energy_matrix(colvar_setup_files, colvar_traj_files, namd_logfiles)
 
