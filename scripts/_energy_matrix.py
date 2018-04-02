@@ -17,8 +17,7 @@ class USWindow(object):
         """
         :param colvar_file: str, name of namd colvar file
         """
-        self._centers, self._force_constant = self._read_colvar_file(colvar_file)
-        self._colvar_names = sorted( self._centers.keys() )
+        self._colvar_names, self._centers, self._force_constant = self._read_colvar_file(colvar_file)
 
     def _read_colvar_file(self, file_name):
         """
@@ -56,13 +55,16 @@ class USWindow(object):
 
         centers = {name: float(center) for name, center in zip(names, centers)}
         force_constant = float(force_constant)
-        return centers, force_constant
+        return names, centers, force_constant
 
     def get_colvar_names(self):
         return self._colvar_names
 
     def get_centers(self):
         return self._centers
+
+    def get_force_constant(self):
+        return self._force_constant
 
     def cal_biasing_potentials(self, colvar_values):
         """
@@ -100,7 +102,7 @@ def load_colvar_values_and_forces(file_name):
     :param file_name: str
     :return: a pandas DataFrame
     """
-    print("Loading file :", file_name)
+    #print("Loading file :", file_name)
     header = open(file_name, "r").readline()
     assert header.startswith("#"), file_name + ": first line does not start with #"
     columns = header.split()[2:]
