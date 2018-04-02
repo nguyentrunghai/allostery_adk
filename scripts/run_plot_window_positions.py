@@ -78,5 +78,6 @@ xs = [center[args.x] for center in centers]
 ys = [center[args.y] for center in centers]
 point_labels = range(args.nr_colvar_files)
 
-colors = ["r" if i<54 else "k" for i in range(args.nr_colvar_files)]
+#colors = ["r" if i<54 else "k" for i in range(args.nr_colvar_files)]
+colors = [ "k" for _ in range(args.nr_colvar_files)]
 _annotated_scatter_plot(xs, ys, point_labels, colors, args.out, xlabel=args.x, ylabel=args.y)
