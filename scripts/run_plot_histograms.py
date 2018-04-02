@@ -167,6 +167,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--namd_dir',           type=str, default="adk")
 parser.add_argument('--nwindows',           type=int, default=54)
+parser.add_argument('--exclude_windows',        type=str, default=" ")
 parser.add_argument('--weight_file',        type=str, default="mbar_weights.nc")
 
 parser.add_argument('--x',        type=str, default="nmp_core_angle")
@@ -179,7 +180,11 @@ args = parser.parse_args()
 
 COLVAR_TRAJ_FILE = "equilibrate.colvars.traj"
 
-colvar_traj_files = [os.path.join(args.namd_dir, "%d"%i, COLVAR_TRAJ_FILE) for i in range(args.nwindows)]
+exclude_windows = [int(s) for s in args.exclude_windows.split()]
+print("exclude_windows", exclude_windows)
+use_windows = [i for i in range(args.nwindows) if i not in exclude_windows]
+
+colvar_traj_files = [os.path.join(args.namd_dir, "%d"%i, COLVAR_TRAJ_FILE) for i in use_windows]
 
 colvar_values = load_colvar_values_matrices(colvar_traj_files)
 
