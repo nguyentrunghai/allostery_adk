@@ -199,7 +199,7 @@ def potential_energy_matrix(colvar_setup_files, colvar_traj_files, namd_logfiles
 
             pot = window_l.cal_biasing_potentials(sample_k)
 
-            u_kln[k, l, :] = pot.values
+            u_kln[k, l, :] = pot.values + u0_kl[k, l]           # fix bug
 
     u_kln *= BETA
 
